@@ -16,17 +16,28 @@ import picocli.CommandLine.Command;
         ListCommand.class,
         QuizCommand.class,
         ReviewCommand.class,
-        StatsCommand.class
+        StatsCommand.class,
+        CommandLine.HelpCommand.class
     }
 )
 public class BaguApplication implements Runnable {
 
     public static void main(String[] args) {
+        // Fix Windows console encoding for Chinese characters
+        System.setProperty("file.encoding", "UTF-8");
+        var out = new java.io.PrintStream(System.out, true, java.nio.charset.StandardCharsets.UTF_8);
+        System.setOut(out);
+        var err = new java.io.PrintStream(System.err, true, java.nio.charset.StandardCharsets.UTF_8);
+        System.setErr(err);
+
         DatabaseManager.initialize();
-        int exitCode = new CommandLine(new BaguApplication())
+        var cmd = new CommandLine(new BaguApplication())
                 .setColorScheme(CommandLine.Help.defaultColorScheme(
-                        CommandLine.Help.Ansi.ON))
-                .execute(args);
+                        CommandLine.Help.Ansi.ON));
+        // Ensure UTF-8 output for Picocli help text
+        cmd.setOut(new java.io.PrintWriter(System.out, true));
+        cmd.setErr(new java.io.PrintWriter(System.err, true));
+        int exitCode = cmd.execute(args);
         System.exit(exitCode);
     }
 
